@@ -22,13 +22,14 @@ Enter any GitHub username and get a structured analysis of their developer profi
 - **Language breakdown** — stacked bar + individual percentage bars per language
 - **Strengths & insights** — data-backed observations on activity, reputation, specialization
 - **Notable repositories** — top repos with stars, language, description, links
+- **Per-request AI provider & model** — choose Claude / OpenAI / Gemini per analysis; type any model ID (e.g. `claude-opus-4-6`, `gpt-4.5`) or leave blank to use the default
 - **Works without any API key** — built-in `LocalProfileAnalyzer` runs rule-based analysis when no AI key is set
 
 ### Tool 2 — README Generator
 
 - **3 themes** — Minimal, Colorful, Dark
 - **7 toggleable sections** — Header, About Me, AI Bio, GitHub Stats, Top Languages, Top Repos, Social Links
-- **Optional AI bio** — one click generates a personalized bio from your profile data
+- **Optional AI bio** — choose provider + model per request; leave model blank to use the default
 - **Live preview + one-click copy**
 
 ---
@@ -142,16 +143,16 @@ Configure locally in `appsettings.Development.json`, or as environment variables
 
 ## AI Provider Selection
 
-The backend picks the first configured provider:
+Each request can specify a provider and model independently. The frontend shows a dropdown of configured providers (only those with an API key set) and a free-text model input — leave it blank to use the default.
 
-```
-1. ANTHROPIC_API_KEY  →  Claude 3.5 Sonnet      (best quality)
-2. OPENAI_API_KEY     →  GPT-4o mini             (fast, cheap)
-3. GEMINI_API_KEY     →  Gemini 1.5 Flash        (free tier available)
-4. None              →  LocalProfileAnalyzer     (always works, no cost)
-```
+| Provider | Default model | Notes |
+|---|---|---|
+| Claude | `claude-3-5-sonnet-20241022` | Best quality |
+| OpenAI | `gpt-4o-mini` | Fast, cheap |
+| Gemini | `gemini-1.5-flash` | Free tier available |
+| Algorithmic | — | Always works, no cost |
 
-Badge on the analysis page: `✨ Claude` (violet) · `✨ GPT-4o` (green) · `✨ Gemini` (blue) · `Algorithmic` (gray).
+Type any model ID to override the default (e.g. `claude-opus-4-6`, `gpt-4.5`, `gemini-2.0-flash-exp`). The badge on the analysis page shows which provider was used.
 
 ---
 
@@ -171,9 +172,11 @@ All endpoints return: `{ "success": boolean, "data": T, "error": string }`
 
 **`GET /api/health`** — Returns `{ "status": "ok" }`.
 
+**`GET /api/ai/providers`** — Returns the list of AI providers that have an API key configured. Used by the frontend to populate the provider dropdown.
+
 **`GET /api/github/{username}`** — Fetches profile, repos, stars, languages. Cached 5 min (404s: 2 min). Returns 400 for invalid usernames, 404 if not found, 429 on rate limit.
 
-**`GET /api/analysis/{username}`** — Returns a full `ProfileAnalysis` object. Never returns 503 — always falls back to algorithmic analysis.
+**`GET /api/analysis/{username}?provider=claude&model=claude-opus-4-6`** — Returns a full `ProfileAnalysis` object. `provider` and `model` are optional; omit both for algorithmic fallback. Never returns 503.
 
 ```json
 {
@@ -191,7 +194,7 @@ All endpoints return: `{ "success": boolean, "data": T, "error": string }`
 }
 ```
 
-**`POST /api/bio/generate`** — Generates an AI-written bio. Body: `GitHubProfile` object. Returns 503 if no AI provider is configured.
+**`POST /api/bio/generate?provider=openai&model=gpt-4.5`** — Generates an AI-written bio. Body: `GitHubProfile` object. `provider` and `model` optional — omit to auto-select first configured provider. Returns 503 if no AI provider is configured.
 
 **`POST /api/readme/generate`** — Generates README markdown. Body: `{ username, theme, enabledSections, aiBio, profile }`. Valid themes: `minimal` · `colorful` · `dark`. Valid sections: `header` · `about` · `ai_bio` · `stats` · `languages` · `top_repos` · `socials`.
 
