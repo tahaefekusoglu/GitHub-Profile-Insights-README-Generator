@@ -6,17 +6,9 @@ A full-stack web application with two tools: analyze any GitHub developer profil
 
 ---
 
-## Screenshots
+## Screenshot
 
-### Landing Page
 ![Landing Page](docs/screenshots/landing.png)
-
-### Profile Insights
-![Profile Insights](docs/screenshots/analyze-top.png)
-![Profile Insights Full](docs/screenshots/analyze-full.png)
-
-### README Generator
-![README Generator](docs/screenshots/generate.png)
 
 ---
 
