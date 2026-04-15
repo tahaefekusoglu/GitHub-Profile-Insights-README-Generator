@@ -69,6 +69,23 @@ export interface ProfileAnalysis {
   stats: AnalysisStats;
 }
 
+export interface AiProviderInfo {
+  id: string;
+  name: string;
+  defaultModel: string;
+}
+
+export interface AvailableProvidersResponse {
+  available: AiProviderInfo[];
+}
+
+// Provider id → default model id
+export const PROVIDER_DEFAULTS: Record<string, string> = {
+  claude: "claude-3-5-sonnet-20241022",
+  openai: "gpt-4o-mini",
+  gemini: "gemini-1.5-flash",
+};
+
 export const ALL_SECTIONS = [
   { id: "header", label: "Header" },
   { id: "about", label: "About Me" },

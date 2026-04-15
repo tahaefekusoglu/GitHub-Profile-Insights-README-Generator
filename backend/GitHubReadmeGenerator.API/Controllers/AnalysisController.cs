@@ -14,39 +14,53 @@ public class AnalysisController : ControllerBase
         new(@"^[a-zA-Z0-9\-]{1,39}$", RegexOptions.Compiled);
 
     private readonly IGitHubService _github;
-    private readonly IAiService _aiService;
+    private readonly ClaudeService _claude;
+    private readonly OpenAiService _openai;
+    private readonly GeminiService _gemini;
 
-    public AnalysisController(IGitHubService github, IAiService aiService)
+    public AnalysisController(
+        IGitHubService github,
+        ClaudeService claude,
+        OpenAiService openai,
+        GeminiService gemini)
     {
         _github = github;
-        _aiService = aiService;
+        _claude = claude;
+        _openai = openai;
+        _gemini = gemini;
     }
 
     [HttpGet("api/analysis/{username}")]
-    public async Task<IActionResult> GetAnalysis(string username)
+    public async Task<IActionResult> GetAnalysis(
+        string username,
+        [FromQuery] string? provider = null,
+        [FromQuery] string? model = null)
     {
         if (!UsernameRegex.IsMatch(username))
-        {
             return BadRequest(new ApiResponse<ProfileAnalysis>
             {
                 Success = false,
                 Error = "Invalid GitHub username format."
             });
-        }
 
         var profile = await _github.GetProfileAsync(username);
         if (profile is null)
-        {
             return NotFound(new ApiResponse<ProfileAnalysis>
             {
                 Success = false,
                 Error = $"GitHub user '{username}' not found."
             });
-        }
+
+        var service = ResolveService(provider);
 
         try
         {
-            var analysis = await _aiService.GenerateAnalysisAsync(profile);
+            ProfileAnalysis analysis;
+            if (service is not null)
+                analysis = await service.GenerateAnalysisAsync(profile, model);
+            else
+                analysis = LocalProfileAnalyzer.Analyze(profile);
+
             return Ok(new ApiResponse<ProfileAnalysis> { Success = true, Data = analysis });
         }
         catch (InvalidOperationException)
@@ -63,4 +77,12 @@ public class AnalysisController : ControllerBase
             });
         }
     }
+
+    private IAiService? ResolveService(string? provider) => provider switch
+    {
+        "claude" => _claude,
+        "openai" => _openai,
+        "gemini" => _gemini,
+        _ => null
+    };
 }

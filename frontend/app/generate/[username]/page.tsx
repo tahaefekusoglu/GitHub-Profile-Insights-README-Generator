@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
-import { fetchGitHubProfile, generateBio, generateReadme } from "@/lib/api";
-import { ALL_SECTIONS, GitHubProfile, ReadmeConfig, Theme } from "@/lib/types";
+import { fetchAvailableProviders, fetchGitHubProfile, generateBio, generateReadme } from "@/lib/api";
+import { ALL_SECTIONS, AiProviderInfo, GitHubProfile, ReadmeConfig, Theme } from "@/lib/types";
 import ProfileCard from "@/components/ProfileCard";
 import ThemeSelector from "@/components/ThemeSelector";
 import SectionToggle from "@/components/SectionToggle";
 import ReadmePreview from "@/components/ReadmePreview";
 import CopyButton from "@/components/CopyButton";
+import AiModelSelector from "@/components/AiModelSelector";
 
 function ProfileCardSkeleton() {
   return (
@@ -43,6 +44,10 @@ export default function GeneratePage({ params }: { params: { username: string } 
   const [enabledSections, setEnabledSections] = useState<string[]>(
     ALL_SECTIONS.map((s) => s.id)
   );
+  const [aiProviders, setAiProviders] = useState<AiProviderInfo[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState("");
+  const [customModel, setCustomModel] = useState("");
+
   const [aiBio, setAiBio] = useState<string | null>(null);
   const [bioLoading, setBioLoading] = useState(false);
   const [bioError, setBioError] = useState<string | null>(null);
@@ -62,6 +67,9 @@ export default function GeneratePage({ params }: { params: { username: string } 
       .then(setProfile)
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
+    fetchAvailableProviders()
+      .then((res) => setAiProviders(res.available))
+      .catch(() => {});
   }, [username]);
 
   useEffect(() => {
@@ -104,7 +112,7 @@ export default function GeneratePage({ params }: { params: { username: string } 
     setBioLoading(true);
     setBioError(null);
     try {
-      const bio = await generateBio(profile);
+      const bio = await generateBio(profile, selectedProvider || undefined, customModel.trim() || undefined);
       setAiBio(bio);
       if (!enabledSections.includes("ai_bio")) {
         setEnabledSections((prev) => [...prev, "ai_bio"]);
@@ -169,6 +177,14 @@ export default function GeneratePage({ params }: { params: { username: string } 
       {loading ? <ProfileCardSkeleton /> : profile && <ProfileCard profile={profile} />}
       <ThemeSelector value={theme} onChange={handleThemeChange} />
       <SectionToggle enabled={enabledSections} onChange={handleSectionsChange} />
+
+      <AiModelSelector
+        providers={aiProviders}
+        provider={selectedProvider}
+        model={customModel}
+        onProviderChange={setSelectedProvider}
+        onModelChange={setCustomModel}
+      />
 
       {bioError && (
         <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-950 p-4 text-sm text-yellow-800 dark:text-yellow-200">

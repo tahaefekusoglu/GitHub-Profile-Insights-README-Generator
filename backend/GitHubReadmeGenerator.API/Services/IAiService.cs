@@ -4,6 +4,6 @@ namespace GitHubReadmeGenerator.API.Services;
 
 public interface IAiService
 {
-    Task<string> GenerateBioAsync(GitHubProfile profile);
-    Task<ProfileAnalysis> GenerateAnalysisAsync(GitHubProfile profile);
+    Task<string> GenerateBioAsync(GitHubProfile profile, string? model = null);
+    Task<ProfileAnalysis> GenerateAnalysisAsync(GitHubProfile profile, string? model = null);
 }

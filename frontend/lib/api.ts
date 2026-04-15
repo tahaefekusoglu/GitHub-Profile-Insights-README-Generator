@@ -1,4 +1,4 @@
-import { GitHubProfile, ProfileAnalysis, ReadmeConfig } from "./types";
+import { AvailableProvidersResponse, GitHubProfile, ProfileAnalysis, ReadmeConfig } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -24,8 +24,32 @@ export async function fetchGitHubProfile(username: string): Promise<GitHubProfil
   return request<GitHubProfile>(`/api/github/${encodeURIComponent(username)}`);
 }
 
-export async function generateBio(profile: GitHubProfile): Promise<string> {
-  return request<string>("/api/bio/generate", {
+export async function fetchAvailableProviders(): Promise<AvailableProvidersResponse> {
+  return request<AvailableProvidersResponse>("/api/ai/providers");
+}
+
+export async function fetchProfileAnalysis(
+  username: string,
+  provider?: string,
+  model?: string
+): Promise<ProfileAnalysis> {
+  const params = new URLSearchParams();
+  if (provider) params.set("provider", provider);
+  if (model) params.set("model", model);
+  const qs = params.toString() ? `?${params}` : "";
+  return request<ProfileAnalysis>(`/api/analysis/${encodeURIComponent(username)}${qs}`);
+}
+
+export async function generateBio(
+  profile: GitHubProfile,
+  provider?: string,
+  model?: string
+): Promise<string> {
+  const params = new URLSearchParams();
+  if (provider) params.set("provider", provider);
+  if (model) params.set("model", model);
+  const qs = params.toString() ? `?${params}` : "";
+  return request<string>(`/api/bio/generate${qs}`, {
     method: "POST",
     body: JSON.stringify(profile),
   });
@@ -36,8 +60,4 @@ export async function generateReadme(config: ReadmeConfig): Promise<string> {
     method: "POST",
     body: JSON.stringify(config),
   });
-}
-
-export async function fetchProfileAnalysis(username: string): Promise<ProfileAnalysis> {
-  return request<ProfileAnalysis>(`/api/analysis/${encodeURIComponent(username)}`);
 }

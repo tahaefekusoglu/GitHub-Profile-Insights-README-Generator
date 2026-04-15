@@ -8,6 +8,7 @@ namespace GitHubReadmeGenerator.API.Services;
 public class OpenAiService : IAiService
 {
     private readonly OpenAIClient? _client;
+    public bool IsConfigured => _client is not null;
 
     public OpenAiService(IConfiguration config)
     {
@@ -18,12 +19,12 @@ public class OpenAiService : IAiService
             _client = new OpenAIClient(apiKey);
     }
 
-    public async Task<string> GenerateBioAsync(GitHubProfile profile)
+    public async Task<string> GenerateBioAsync(GitHubProfile profile, string? model = null)
     {
         if (_client is null)
             throw new InvalidOperationException("OpenAI API key is not configured");
 
-        var chatClient = _client.GetChatClient("gpt-4o-mini");
+        var chatClient = _client.GetChatClient(model ?? "gpt-4o-mini");
         var completion = await chatClient.CompleteChatAsync(new UserChatMessage(BuildBioPrompt(profile)));
         var text = completion.Value.Content[0].Text;
 
@@ -33,12 +34,12 @@ public class OpenAiService : IAiService
         return text.Trim();
     }
 
-    public async Task<ProfileAnalysis> GenerateAnalysisAsync(GitHubProfile profile)
+    public async Task<ProfileAnalysis> GenerateAnalysisAsync(GitHubProfile profile, string? model = null)
     {
         if (_client is null)
             throw new InvalidOperationException("OpenAI API key is not configured");
 
-        var chatClient = _client.GetChatClient("gpt-4o-mini");
+        var chatClient = _client.GetChatClient(model ?? "gpt-4o-mini");
         var completion = await chatClient.CompleteChatAsync(new UserChatMessage(BuildAnalysisPrompt(profile)));
         var text = completion.Value.Content[0].Text;
 

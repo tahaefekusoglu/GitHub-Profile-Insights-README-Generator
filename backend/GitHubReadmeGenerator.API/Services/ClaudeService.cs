@@ -9,6 +9,7 @@ namespace GitHubReadmeGenerator.API.Services;
 public class ClaudeService : IAiService
 {
     private readonly AnthropicClient? _client;
+    public bool IsConfigured => _client is not null;
 
     public ClaudeService(IConfiguration config)
     {
@@ -19,7 +20,7 @@ public class ClaudeService : IAiService
             _client = new AnthropicClient(apiKey);
     }
 
-    public async Task<string> GenerateBioAsync(GitHubProfile profile)
+    public async Task<string> GenerateBioAsync(GitHubProfile profile, string? model = null)
     {
         if (_client is null)
             throw new InvalidOperationException("Anthropic API key is not configured");
@@ -65,7 +66,7 @@ Write a 2-3 sentence, first-person GitHub profile bio. It should be professional
 
         // AnthropicModels.Claude35Sonnet SDK 4.x'te "claude-3-5-sonnet-20241022" değerini taşır.
         // Sabit bulunamazsa string literal fallback kullanılır.
-        var modelId = AnthropicModels.Claude35Sonnet ?? "claude-3-5-sonnet-20241022";
+        var modelId = model ?? AnthropicModels.Claude35Sonnet ?? "claude-3-5-sonnet-20241022";
 
         var parameters = new MessageParameters
         {
@@ -90,7 +91,7 @@ Write a 2-3 sentence, first-person GitHub profile bio. It should be professional
         }
     }
 
-    public async Task<ProfileAnalysis> GenerateAnalysisAsync(GitHubProfile profile)
+    public async Task<ProfileAnalysis> GenerateAnalysisAsync(GitHubProfile profile, string? model = null)
     {
         if (_client is null)
             throw new InvalidOperationException("Anthropic API key is not configured");
@@ -151,7 +152,7 @@ Base your analysis on actual data. Be specific, not generic. If data is limited,
             }
         };
 
-        var modelId = AnthropicModels.Claude35Sonnet ?? "claude-3-5-sonnet-20241022";
+        var modelId = model ?? AnthropicModels.Claude35Sonnet ?? "claude-3-5-sonnet-20241022";
         var parameters = new MessageParameters
         {
             Model = modelId,

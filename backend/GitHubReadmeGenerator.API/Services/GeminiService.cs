@@ -8,6 +8,7 @@ public class GeminiService : IAiService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly string? _apiKey;
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(_apiKey);
 
     public GeminiService(IHttpClientFactory httpClientFactory, IConfiguration config)
     {
@@ -16,24 +17,24 @@ public class GeminiService : IAiService
                   ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY");
     }
 
-    public async Task<string> GenerateBioAsync(GitHubProfile profile)
+    public async Task<string> GenerateBioAsync(GitHubProfile profile, string? model = null)
     {
         if (string.IsNullOrWhiteSpace(_apiKey))
             throw new InvalidOperationException("Gemini API key is not configured");
 
-        var text = await GenerateTextAsync(BuildBioPrompt(profile));
+        var text = await GenerateTextAsync(BuildBioPrompt(profile), model);
         if (string.IsNullOrWhiteSpace(text))
             throw new Exception("Empty response from Gemini");
 
         return text.Trim();
     }
 
-    public async Task<ProfileAnalysis> GenerateAnalysisAsync(GitHubProfile profile)
+    public async Task<ProfileAnalysis> GenerateAnalysisAsync(GitHubProfile profile, string? model = null)
     {
         if (string.IsNullOrWhiteSpace(_apiKey))
             throw new InvalidOperationException("Gemini API key is not configured");
 
-        var text = await GenerateTextAsync(BuildAnalysisPrompt(profile));
+        var text = await GenerateTextAsync(BuildAnalysisPrompt(profile), model);
         if (string.IsNullOrWhiteSpace(text))
             throw new Exception("Empty response from Gemini");
 
@@ -79,10 +80,11 @@ public class GeminiService : IAiService
         };
     }
 
-    private async Task<string> GenerateTextAsync(string prompt)
+    private async Task<string> GenerateTextAsync(string prompt, string? model = null)
     {
         var client = _httpClientFactory.CreateClient();
-        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}";
+        var geminiModel = model ?? "gemini-1.5-flash";
+        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{geminiModel}:generateContent?key={_apiKey}";
         var request = new
         {
             contents = new[]
