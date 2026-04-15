@@ -1,0 +1,22 @@
+# Backend build artifacts
+backend/**/bin/
+backend/**/obj/
+backend/**/*.user
+
+# Secrets — never commit these
+backend/**/appsettings.Development.json
+backend/**/appsettings.Production.json
+
+# Log files
+backend/**/*.log
+frontend/**/*.log
+*.log
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
