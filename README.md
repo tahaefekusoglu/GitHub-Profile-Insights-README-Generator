@@ -2,7 +2,7 @@
 
 A full-stack web application with two tools: analyze any GitHub developer profile with AI-powered insights, and generate a beautiful profile README — from just a username or URL. No account required.
 
-![CI](https://github.com/tahaefekusoglu/github-profile-insights/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/tahaefekusoglu/GitHub-Profile-Insights-README-Generator/actions/workflows/ci.yml/badge.svg)
 
 ---
 
